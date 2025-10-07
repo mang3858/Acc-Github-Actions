@@ -7,8 +7,16 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Slack message
+      - name: Send message to Slack
+        env:
+          HOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
+          echo "🔍 Testing if HOOK_URL is loaded..."
+          if [ -z "$HOOK_URL" ]; then
+            echo "::error::SLACK_WEBHOOK_URL secret is missing or not accessible"
+            exit 1
+          fi
+
           curl -X POST -H 'Content-type: application/json' \
-          --data '{"text":"GitHub Actions 실습 완료"}' \
-          ${{ secrets.WEBHOOK_URL }}
+            --data '{"text":"ACC GitHub Actions 실습: Slack 연결 성공!"}' \
+            "$HOOK_URL"

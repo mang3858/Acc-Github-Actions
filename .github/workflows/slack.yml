@@ -1,22 +1,25 @@
-name: Slack Notify
+name: Slack Notification  # GitHub Actions의 Actions 탭에 표시되는 이름
 
+# 워크플로 실행조건(트리거) 정의
 on:
+  # 수동 실행 가능 (액션탭에서 직접 Run workflow)
   workflow_dispatch:
+  # PR(풀리퀘스트)이 master 또는 develop 브랜치 대상으로 만들어질 때 자동 실행
+  pull_request:
+    branches: [ "master", "develop" ]
 
+# 실제 실행되는 작업의 정의
 jobs:
-  notify:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Send message to Slack
+      - name: action-slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: www-be
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          if_mention: failure,cancelled
         env:
-          HOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          echo "🔍 Testing if HOOK_URL is loaded..."
-          if [ -z "$HOOK_URL" ]; then
-            echo "::error::SLACK_WEBHOOK_URL secret is missing or not accessible"
-            exit 1
-          fi
-
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"ACC GitHub Actions 실습: Slack 연결 성공!"}' \
-            "$HOOK_URL"
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  
+    if: always()  # Pick up events even if the job fails or is canceled.
